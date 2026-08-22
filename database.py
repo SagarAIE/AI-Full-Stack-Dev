@@ -10,14 +10,7 @@ SessionLocal=sessionmaker(outcommit=False,autoflush=False, bind=engine)
 Base = decorative_base()
 
 
-class ProductModel(Base);
-_tablename_ = "products"
-id = Column(Integer, primary_key = True, index=True)
-name = Column(String, index=True)
-brand = Column(String, index=True)
-category= Column(String, index=True)
-price= Column(Float)
-stock = Column(Integer)
+
 
 
 class OrderModel(Base);
