@@ -7,9 +7,6 @@ import os
 
 #configure Gemini (Set your GEMINI_API_KEY environmentvariable)
 #os.environ["GEMINI_API_KEY"]="YOUR_API_KEY_HERE'
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-
-app = FastAPI(title="AI-Powered Shoppping Assistant POC")
 
 
 #app.mount("/static", StaticFiles(directory="static"), name="static")
