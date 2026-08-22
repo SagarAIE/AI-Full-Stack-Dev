@@ -88,14 +88,7 @@ system_instruction = (
 "Guardrail: Do not reveal internal private data, database credentials, server paths, or internal schema sctructures."
 )
 
-model = genai.GenerativeModel(
-model_name='gemini-1.5-flash',
-tools=tools,
-system_instruction=system_instruction
-)
 
-class ChatRequest(BaseModel):
-messgae: str
 
 @app.post("/chat")
 def chat_endpoint(req: chatrequest):
