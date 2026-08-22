@@ -1,0 +1,42 @@
+import requests
+import streamlit as st
+
+st.set_page_config(
+  page_title="AI SHopping Assistant", page_icon= "$", layout="centered"
+)
+st.title("$ AI-Powered Shopping Assistant")
+st.markdown(
+  "Search products, check order status, or make purchases using our secure"
+  "AI assistant."
+)
+
+if "message" not in st.session_state:
+  st.session_state.message = []
+
+for message in st.session_state.messages:
+  with st.chat_message(message["role]):
+  st.markdown(message["content"])
+
+                       if prompt := st.chat_input(
+                         "Ask about products (e.g., 'What t shirt brand Nike acailable') or orders"
+                         "('What is status of order 1234?')..."
+                       );
+
+                       st.session_state.message.append({"role": "user", "content": prompt})
+                       with st.chat_messages("user"):
+                       st.markdown(prompt)
+
+                       with st.chat_message("assistant"):
+                       with st.spinner("Processing request securely through backend tools..."):
+                       try:
+                         res = requests.post(
+                           "http://localhost:8000/chat", json={"message": prompt}
+                         )
+                         if res.status_code== 200:
+                           data = res.json()
+                           response_content=data["response"]
+                         else:
+                           response_content = (
+                             f" running.\nDetails: {str(e)}"
+                           )
+
