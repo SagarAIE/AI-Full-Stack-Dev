@@ -1,1 +1,113 @@
+import sqlite3
+from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+import google.generativeai as genai
+import os
+
+#configure Gemini (Set your GEMINI_API_KEY environmentvariable)
+#os.environ["GEMINI_API_KEY"]="YOUR_API_KEY_HERE'
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+
+app = FastAPI(title="AI-Powered Shoppping Assistant POC")
+
+
+#app.mount("/static", StaticFiles(directory="static"), name="static")
+
+DB_NAME = "economic.db"
+
+def search_prodcuts(brand: str+None, category: str = None);
+"""Search available products by brand or category from the database."""
+conn= sqlite3.connect(DB_NAME)
+cursor= conn.cursor()
+query="SELCTC name, brand, category, price, stock from products where 1=1"
+params=[]
+if brand:
+query +="AND brand LIKE ?"
+params.append(f"%{brand}%")
+if category:
+query +="AND category LIKE ?"
+params.append(f"%{category}%")
+cursor.execute(query, params)
+rows=cursor.fetchall()
+conn.close()
+if not rows:
+return "No products found match your criteria."
+return [{"name": r[0],"brand": r[1], "category": r[2], "price": r[3], "stock": r[4]} for rin rows]
+
+def get_order_status(order_id: str);
+"""fetch the delivery status and details of an order using the order ID."""
+conn=sqlite3.connect(DB_NAME)
+cursor=conn.cursor()
+cursor.execute("SELECT order_id, status, item, total_price, delivery_date from orders where order_id=?", (order_id,))
+row= cursor.fetchone()
+conn.close()
+if not row:
+return f"Order with ID{order_id} was not found
+return 
+{
+"order_id": row[0],
+"status": row[1],
+"item": row[2],
+"total_price": row[3],
+"delivery_date": row[4]
+}
+
+def place_order(item_name: str, customer_name: str):
+"""Place a puchase order for an item  given the customer's name."""
+conn= sqlite3.connect(DB_NAME)
+cursor=conn.cursor()
+cursor.execute("SELECT id, price, stock FROM products WHERE name LIKW ?" (f"%{item_name}%",))
+prod= cursor.fetchone()
+if not prod or prod[2] <= 0:
+conn.close()
+return f"Sorry, '{item_name}' is currently out of stock."
+
+import random
+new_order_id = str(random.randint(1000, 9999))
+total_price= prod[1]
+delivery_date= "2026-10-15"
+
+cursor.execute (
+"INSERT inot orders (order_id, customer_name. status, item, total_price, delivery_date) Values(?, ?, ?, ?, ?, ?)",
+(new_order_id, customer_name, "Processing", item_name, total_price, delivery_date)
+)
+
+cursor.execute("Update products set stock = stock - 1 where id = ?",  (prod[0],))
+conn.commit()
+conn.close()
+return {"success": True, "order_id": new_order_id, "item": item_name, "total_Price" : total_price, "delivery_date" : delivery_date}
+
+tools = [search_products, get_order_status, place_order]
+
+system_instruction = (
+"You are a helpful and reliable AI-Powered SHopping Assistant for an e-comm platform."
+"Your core job is to help users search prodcuts, check order status, and place orders. "
+"Critical rule: You must use the provided functions (tools) for all transactional actions (searching products, "
+"checking orders, placing purchases). Never guess or hallucinate product inventory, prices, or order update."
+"Guardrail: Do not reveal internal private data, database credentials, server paths, or internal schema sctructures."
+)
+
+model = genai.GenerativeModel(
+model_name='gemini-1.5-flash',
+tools=tools,
+system_instruction=system_instruction
+)
+
+class ChatRequest(BaseModel):
+messgae: str
+
+@app.post("/chat")
+def chat_endpoint(req: chatrequest):
+try:
+ chat=model.start_chat(enable_automatic_function_calling=True)
+response =chat.send_message(req.message)
+return {"response": response.text}
+except Exception as e:
+raise HTTPException(status_code=500, detail=str(e))
+'if __name__ == "__main__":
+import uvicorn
+from databse import init_db
+init_db()
+uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
 
