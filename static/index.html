@@ -43,8 +43,39 @@
         messageContainer.scrollTop=messageContainer.scrollHeight;
 
         const loadingId='loading-' + date.now();
+        messageContainer.innerHTML += `<div id="${loadingId}" class="message assistant loading">Thinking...</div>`;
+        messageContainer.scrollTop = messageContainer.scrollHeight;
 
-      messageContainer
+        try {
+          const response= await fetch('/chat', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({message:text})
+          });
+
+          const data = await response.json();
+          document.getElementById(loadingId).remove();
+
+          if (response.ok) 
+          {
+            messageContainer.innerHTML += `<div class="message assistant">${escapeHtml(data.response)}</div>`;
+          }
+          else
+          {
+            messageContainer.innerHTML += `<div class="message assistant" style="color: red;">Error: ${escapeHtml(data.detail || 'Something went wrong.')}<div>`;
+          }
+          catch(err)
+        {
+          document.getElementById(loadingId).remove();
+          messageContainer.innerHTML += `<div class="message assistant" style="color: red;">Network Error. Please try again. </div`;
+        }
+        messageContainer.scrollTop= messageContainer.scrollHeight;
+      }
+      fucntion escapeHtml(text) 
+      {
+        return text.replace(/&/g, "&amp;").replace(/</g, "&l;").repplace(/,>/g, "&gt;");
+      }
+
     </script>
   </body>
-  </head>
+  </html>
