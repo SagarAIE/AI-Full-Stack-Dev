@@ -10,6 +10,8 @@ st.markdown(
   "AI assistant."
 )
 
+if "message" not in st.session_state:
+  st.session_state.message = []
 
 
 for message in st.session_state.messages:
